@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  Home
+{% endblock %}
+
+{% block content %}
+  <div class="home-container">
+    <!-- Welcome Section -->
+    <div class="welcome-section">
+      <h1>Welcome, {{ request.user.username }}!</h1>
+      <p class="tagline">Share your moments with the world</p>
+    </div>
+
+    <!-- Quick Create Section -->
+    <div class="quick-create-section">
+      <h2>Create New Post</h2>
+      <div class="post-type-buttons">
+        {% for post_type in post_types %}
+          <a href="{% url 'create_post' post_type.type %}" class="create-button">
+            <i class="{{ post_type.icon }}"></i>
+            <span>{{ post_type.name }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Recent Posts Section -->
+    <div class="recent-posts-section">
+      <div class="section-header">
+        <h2>Recent Posts</h2>
+        <a href="{% url 'post_list' %}" class="view-all-link">View All</a>
+      </div>
+
+      <div class="posts-grid">
+        {% for post in recent_posts %}
+          <div class="post-card">
+            <div class="post-header">
+              <img src="{{ post.author.profile.avatar.url|default:'/static/images/default-avatar.png' }}" alt="{{ post.author.username }}" class="author-avatar" />
+              <div class="post-meta">
+                <h3>{{ post.title }}</h3>
+                <p>By {{ post.author.username }} • {{ post.created_at|timesince }} ago</p>
+              </div>
+            </div>
+
+            <div class="post-preview">
+              {% if post.post_type == 'imagepost' %}
+                <img src="{{ post.image.url }}" alt="{{ post.caption|default:post.title }}" class="preview-image" />
+              {% elif post.post_type == 'videopost' %}
+                {% if post.thumbnail %}
+                  <div class="video-thumbnail" style="background-image: url('{{ post.thumbnail.url }}')">
+                    <span class="play-icon">▶</span>
+                  </div>
+                {% endif %}
+              {% elif post.post_type == 'voicepost' %}
+                <div class="audio-preview">
+                  <i class="fas fa-microphone"></i>
+                  <span>Audio Post</span>
+                </div>
+              {% endif %}
+
+              {% if post.content %}
+                <p class="post-excerpt">{{ post.content|truncatewords:30 }}</p>
+              {% endif %}
+            </div>
+
+            <div class="post-footer">
+              <a href="{% url 'post_detail' post.post_type post.id %}" class="read-more">Read More</a>
+              <div class="post-stats">
+                <span><i class="fas fa-heart"></i> {{ post.likes.count }}</span>
+                <span><i class="fas fa-comment"></i> {{ post.comment_set.count }}</span>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <div class="no-posts">
+            <p>No posts yet. Be the first to create a post!</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .home-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+    
+    .welcome-section {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    
+    .welcome-section h1 {
+      font-size: 2.5rem;
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+    
+    .tagline {
+      color: #666;
+      font-size: 1.2rem;
+    }
+    
+    .quick-create-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      margin-bottom: 3rem;
+    }
+    
+    .post-type-buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .create-button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem;
+      background: #f8f9fa;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #495057;
+      transition: all 0.2s;
+    }
+    
+    .create-button:hover {
+      background: #e9ecef;
+      border-color: #adb5bd;
+      transform: translateY(-2px);
+    }
+    
+    .recent-posts-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    
+    .view-all-link {
+      color: #007bff;
+      text-decoration: none;
+    }
+    
+    .posts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+    
+    .post-card {
+      background: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+    
+    .post-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .post-header {
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border-bottom: 1px solid #dee2e6;
+    }
+    
+    .author-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    
+    .post-meta h3 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+    
+    .post-meta p {
+      margin: 0.25rem 0 0;
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+    
+    .post-preview {
+      padding: 1rem;
+    }
+    
+    .preview-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+    
+    .video-thumbnail {
+      position: relative;
+      padding-top: 56.25%;
+      background-size: cover;
+      background-position: center;
+      border-radius: 4px;
+    }
+    
+    .play-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 3rem;
+      color: white;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    .audio-preview {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 2rem;
+      background: #f8f9fa;
+      border-radius: 4px;
+      color: #495057;
+    }
+    
+    .post-excerpt {
+      margin: 1rem 0 0;
+      color: #495057;
+      line-height: 1.5;
+    }
+    
+    .post-footer {
+      padding: 1rem;
+      border-top: 1px solid #dee2e6;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .read-more {
+      color: #007bff;
+      text-decoration: none;
+    }
+    
+    .post-stats {
+      display: flex;
+      gap: 1rem;
+      color: #6c757d;
+    }
+    
+    .no-posts {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 3rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      color: #6c757d;
+    }
+    
+    @media (max-width: 768px) {
+      .posts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+{% endblock %}

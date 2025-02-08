@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+  <div class="post-list-container">
+    <!-- Create Post Buttons -->
+    <div class="create-post-section">
+      <h3>Create New Post</h3>
+      <div class="post-type-buttons">
+        {% for post_type in post_types %}
+          <a href="{% url 'create_post' post_type.type %}" class="btn btn-create"><i class="fas fa-plus"></i> {{ post_type.name }}</a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Posts List -->
+    <div class="posts">
+      {% for post in posts %}
+        <article class="post-card">
+          <div class="post-header">
+            <div class="post-meta">
+              <img src="{{ post.author.profile.avatar.url|default:'/static/images/default-avatar.png' }}" alt="{{ post.author.username }}" class="author-avatar" />
+              <div class="post-info">
+                <h3>{{ post.title }}</h3>
+                <p class="post-author">By {{ post.author.username }} •
+                  {{ post.created_at|timesince }} ago</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="post-content">
+            {% if post.content %}
+              <p class="post-text">{{ post.content|truncatewords:50 }}</p>
+            {% endif %}
+
+            {% if post.post_type == 'imagepost' %}
+              <div class="post-media">
+                <img src="{{ post.image.url }}" alt="{{ post.caption|default:post.title }}" class="post-image" />
+                {% if post.caption %}
+                  <p class="image-caption">{{ post.caption }}</p>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            {% if post.post_type == 'videopost' %}
+              <div class="post-media">
+                {% if post.thumbnail %}
+                  <div class="video-thumbnail" style="background-image: url('{{ post.thumbnail.url }}')">
+                    <span class="play-icon">▶</span>
+                  </div>
+                {% else %}
+                  <video controls class="post-video">
+                    <source src="{{ post.video.url }}" type="video/mp4" />Your browser does not support the video tag.
+                  </video>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            {% if post.post_type == 'voicepost' %}
+              <div class="post-media">
+                <audio controls class="post-audio">
+                  <source src="{{ post.audio.url }}" type="audio/mpeg" />Your browser does not support the audio element.
+                </audio>
+                {% if post.duration %}
+                  <p class="duration">Duration: {{ post.duration }}</p>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="post-footer">
+            <div class="post-actions">
+              <button class="btn-like {% if request.user in post.likes.all %}liked{% endif %}" data-post-id="{{ post.id }}" data-post-type="{{ post.post_type }}">
+                <i class="fas fa-heart"></i>
+                <span class="likes-count">{{ post.likes.count }}</span>
+              </button>
+              <a href="{% url 'post_detail' post.post_type post.id %}" class="btn-comment">
+                <i class="fas fa-comment"></i>
+                Comments
+              </a>
+            </div>
+          </div>
+        </article>
+      {% empty %}
+        <div class="no-posts">
+          <p>No posts yet. Be the first to create a post!</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="?page=1" class="page-link">&laquo; First</a>
+          <a href="?page={{ page_obj.previous_page_number }}" class="page-link">Previous</a>
+        {% endif %}
+
+        <span class="current-page">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}" class="page-link">Next</a>
+          <a href="?page={{ page_obj.paginator.num_pages }}" class="page-link">Last &raquo;</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  {% block extra_css %}
+    <style>
+      .post-list-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+      }
+      
+      .create-post-section {
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      
+      .post-type-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+      }
+      
+      .btn-create {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        transition: background-color 0.2s;
+      }
+      
+      .btn-create:hover {
+        background-color: #0056b3;
+      }
+      
+      .post-card {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        overflow: hidden;
+      }
+      
+      .post-header {
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+      }
+      
+      .post-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      
+      .author-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+      
+      .post-info h3 {
+        margin: 0;
+        font-size: 1.2rem;
+      }
+      
+      .post-author {
+        margin: 0.25rem 0 0;
+        color: #666;
+        font-size: 0.9rem;
+      }
+      
+      .post-content {
+        padding: 1rem;
+      }
+      
+      .post-text {
+        margin: 0 0 1rem;
+        line-height: 1.5;
+      }
+      
+      .post-media {
+        margin: 1rem 0;
+      }
+      
+      .post-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: 4px;
+      }
+      
+      .video-thumbnail {
+        position: relative;
+        padding-top: 56.25%;
+        background-size: cover;
+        background-position: center;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      
+      .play-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 3rem;
+        color: white;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      
+      .post-video,
+      .post-audio {
+        width: 100%;
+        border-radius: 4px;
+      }
+      
+      .post-footer {
+        padding: 1rem;
+        border-top: 1px solid #eee;
+      }
+      
+      .post-actions {
+        display: flex;
+        gap: 1rem;
+      }
+      
+      .btn-like,
+      .btn-comment {
+        padding: 0.5rem 1rem;
+        border: none;
+        background: none;
+        color: #666;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+      }
+      
+      .btn-like.liked {
+        color: #dc3545;
+      }
+      
+      .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 2rem;
+      }
+      
+      .page-link {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        background: #fff;
+        color: #007bff;
+        text-decoration: none;
+        transition: background-color 0.2s;
+      }
+      
+      .page-link:hover {
+        background-color: #f8f9fa;
+      }
+      
+      .current-page {
+        padding: 0.5rem 1rem;
+        color: #666;
+      }
+      
+      .no-posts {
+        text-align: center;
+        padding: 3rem;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  {% endblock %}
+
+  {% block extra_js %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        // Handle like button clicks
+        const likeButtons = document.querySelectorAll('.btn-like')
+        likeButtons.forEach((button) => {
+          button.addEventListener('click', function () {
+            const postId = this.dataset.postId
+            const postType = this.dataset.postType
+      
+            fetch(`/api/like/${postType}/${postId}/`, {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+              }
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.status === 'success') {
+                  this.classList.toggle('liked')
+                  const likesCount = this.querySelector('.likes-count')
+                  likesCount.textContent = data.likes_count
+                }
+              })
+          })
+        })
+      
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+          let cookieValue = null
+          if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';')
+            for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim()
+              if (cookie.substring(0, name.length + 1) === name + '=') {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1))
+                break
+              }
+            }
+          }
+          return cookieValue
+        }
+      })
+    </script>
+  {% endblock %}
+{% endblock %}
