@@ -1,13 +1,19 @@
 from django.db.models import Q
 from itertools import chain
-from .models import TextPost, ImagePost, VideoPost, VoicePost
-from django.views.generic import DetailView, ListView
+from .models import TextPost, ImagePost, VideoPost, VoicePost, Comment
+from django.views.generic import DetailView, ListView, CreateView
 from django.shortcuts import get_object_or_404
 from django.contrib.contenttypes.models import ContentType
 from django.http import Http404
 from django.urls import reverse
 from django.shortcuts import render, redirect
-from .forms import TextPostForm, ImagePostForm, VideoPostForm, VoicePostForm, Comment
+from .forms import (
+    TextPostForm,
+    ImagePostForm,
+    VideoPostForm,
+    VoicePostForm,
+    CommentForm,
+)
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 
@@ -50,6 +56,7 @@ class PostDetailView(DetailView):
         context["comments"] = Comment.objects.filter(
             content_type=content_type, object_id=post.pk
         )
+        context["comment_form"] = CommentForm()
         return context
 
 
@@ -110,4 +117,45 @@ class PostListView(LoginRequiredMixin, ListView):
             {"type": "video", "name": "Video Post"},
             {"type": "voice", "name": "Voice Post"},
         ]
+        return context
+
+
+class CommentCreateView(LoginRequiredMixin, CreateView):
+    model = Comment
+    form_class = CommentForm
+
+    def dispatch(self, request, *args, **kwargs):
+        # Get the post type and ID from the URL and store them
+        self.post_type = self.kwargs["post_type"]
+        self.post_id = self.kwargs["post_id"]
+
+        # Pre-fetch the content type to avoid repeated lookups
+        self.content_type = ContentType.objects.get_for_model(
+            {
+                "text": TextPost,
+                "image": ImagePost,
+                "video": VideoPost,
+                "voice": VoicePost,
+            }[self.post_type]
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user  # Use 'author' not 'user'
+        form.instance.object_id = self.post_id
+        form.instance.content_type = self.content_type
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        # Correctly reverse the URL using post_type and post_id
+        return reverse(
+            "post_detail",
+            kwargs={"post_type": self.post_type, "pk": self.post_id},
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add post_type and post_id to the form's hidden input fields
+        context["post_type"] = self.post_type
+        context["post_id"] = self.post_id
         return context

@@ -105,7 +105,7 @@ class CommentForm(forms.ModelForm):
                 attrs={
                     "rows": 3,
                     "placeholder": "Write a comment...",
-                    "class": "comment-input",
+                    "class": "form-control",
                 }
             )
         }
