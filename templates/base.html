@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -10,6 +11,7 @@
     </title>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="{% static 'assets/bootstrap/css/bootstrap.min.css' %}" />
     <style>
       /* Reset and base styles */
       * {
@@ -227,9 +229,10 @@
     <!-- Main Content -->
     <main class="main-content">
       {% block content %}
+
       {% endblock %}
     </main>
-
+    <script src="{% static 'assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <script>
       // Toggle user dropdown menu
       function toggleDropdown() {
@@ -263,6 +266,7 @@
     </script>
 
     {% block extra_js %}
+
     {% endblock %}
   </body>
 </html>

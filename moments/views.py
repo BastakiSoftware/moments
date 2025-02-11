@@ -45,7 +45,7 @@ class PostDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         # Get comments for the post
         content_type = ContentType.objects.get_for_model(self.object.__class__)
-        context["comments"] = self.object.comment_set.all()
+        # context["comments"] = self.object.comment_set.all()
         return context
 
 
