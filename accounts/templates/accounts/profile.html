@@ -1,12 +1,261 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}
-  {{ user.username }}'s Profile
+  {{ profile_user.username }}'s Profile
 {% endblock %}
 
 {% block content %}
-  <div class="container">
-    <h1>Profile</h1>
-    <p>{{ user.username }}</p>
+  <div class="profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="profile-cover-photo"></div>
+      <div class="profile-info">
+        <div class="profile-avatar">
+          {% if profile_user.profile_picture %}
+            <img src="{{ profile_user.profile_picture.url }}" alt="{{ profile_user.username }}'s avatar" />
+          {% else %}
+            <img src="{% static 'images/default-avatar.png' %}" alt="{{ profile_user.username }}'s avatar" />
+          {% endif %}
+        </div>
+        <div class="profile-details">
+          <h1>{{ profile_user.get_full_name|default:profile_user.username }}</h1>
+          <p class="username">@{{ profile_user.username }}</p>
+          {% if profile_user.bio %}
+            <p class="bio">{{ profile_user.bio }}</p>
+          {% endif %}
+          <div class="profile-meta">
+            {% if profile_user.location %}
+              <span><i class="fas fa-map-marker-alt"></i> {{ profile_user.location }}</span>
+            {% endif %}
+            <span><i class="fas fa-calendar"></i> Joined {{ profile_user.date_joined|date:'F Y' }}</span>
+          </div>
+        </div>
+        {% if user == profile_user %}
+          <a href="{% url 'profile_edit' %}" class="edit-profile-btn"><i class="fas fa-edit"></i> Edit Profile</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Profile Content -->
+    <div class="profile-content">
+      <!-- Profile Stats -->
+      <div class="profile-stats">
+        <div class="stat-item">
+          <span class="stat-value">{{ profile_user.textposts.count|add:profile_user.imageposts.count|add:profile_user.videoposts.count|add:profile_user.voiceposts.count }}</span>
+          <span class="stat-label">Posts</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ profile_user.comments.count }}</span>
+          <span class="stat-label">Comments</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ profile_user.liked_textposts.count|add:profile_user.liked_imageposts.count|add:profile_user.liked_videoposts.count|add:profile_user.liked_voiceposts.count }}</span>
+          <span class="stat-label">Likes Given</span>
+        </div>
+      </div>
+
+      <!-- User Posts -->
+      <div class="profile-posts">
+        <h2>Posts by {{ profile_user.username }}</h2>
+        <div class="posts-grid">
+          {% with text_posts=profile_user.textposts.all %}
+            {% with image_posts=profile_user.imageposts.all %}
+              {% with video_posts=profile_user.videoposts.all %}
+                {% with voice_posts=profile_user.voiceposts.all %}
+                  {% for post in text_posts|slice:':5' %}
+                    {% include 'moments/includes/post_card.html' with post=post %}
+                  {% endfor %}
+
+                  {% for post in image_posts|slice:':5' %}
+                    {% include 'moments/includes/post_card.html' with post=post %}
+                  {% endfor %}
+
+                  {% for post in video_posts|slice:':5' %}
+                    {% include 'moments/includes/post_card.html' with post=post %}
+                  {% endfor %}
+
+                  {% for post in voice_posts|slice:':5' %}
+                    {% include 'moments/includes/post_card.html' with post=post %}
+                  {% endfor %}
+                {% endwith %}
+              {% endwith %}
+            {% endwith %}
+          {% endwith %}
+
+          {% if not profile_user.textposts.exists and not profile_user.imageposts.exists and not profile_user.videoposts.exists and not profile_user.voiceposts.exists %}
+            <div class="no-posts">
+              <p>No posts yet.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
   </div>
+
+  <style>
+    .profile-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+    
+    .profile-header {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    
+    .profile-cover-photo {
+      height: 200px;
+      background-color: #007bff;
+      background-image: linear-gradient(45deg, #007bff, #0056b3);
+    }
+    
+    .profile-info {
+      padding: 2rem;
+      position: relative;
+      display: flex;
+      gap: 2rem;
+    }
+    
+    .profile-avatar {
+      margin-top: -80px;
+    }
+    
+    .profile-avatar img {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 4px solid #fff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      object-fit: cover;
+    }
+    
+    .profile-details {
+      flex: 1;
+    }
+    
+    .profile-details h1 {
+      margin: 0;
+      font-size: 2rem;
+      color: #333;
+    }
+    
+    .username {
+      color: #666;
+      margin: 0.5rem 0;
+    }
+    
+    .bio {
+      margin: 1rem 0;
+      color: #495057;
+      line-height: 1.5;
+    }
+    
+    .profile-meta {
+      display: flex;
+      gap: 1.5rem;
+      color: #666;
+      margin-top: 1rem;
+    }
+    
+    .profile-meta span {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .edit-profile-btn {
+      padding: 0.5rem 1rem;
+      background-color: #007bff;
+      color: white;
+      border-radius: 4px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background-color 0.2s;
+    }
+    
+    .edit-profile-btn:hover {
+      background-color: #0056b3;
+      color: white;
+    }
+    
+    .profile-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+    }
+    
+    .stat-item {
+      text-align: center;
+    }
+    
+    .stat-value {
+      display: block;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #007bff;
+    }
+    
+    .stat-label {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    
+    .profile-posts {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .profile-posts h2 {
+      margin-bottom: 1.5rem;
+      color: #333;
+    }
+    
+    .posts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .no-posts {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 3rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      color: #666;
+    }
+    
+    @media (max-width: 768px) {
+      .profile-info {
+        flex-direction: column;
+        text-align: center;
+      }
+    
+      .profile-avatar {
+        margin: -80px auto 0;
+      }
+    
+      .profile-meta {
+        justify-content: center;
+      }
+    
+      .edit-profile-btn {
+        margin-top: 1rem;
+      }
+    }
+  </style>
 {% endblock %}

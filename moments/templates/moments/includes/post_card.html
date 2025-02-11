@@ -1,0 +1,224 @@
+{% load static %}
+
+<article class="post-card">
+  <div class="post-header">
+    <div class="post-meta">
+      {% if post.author.profile_picture %}
+        <img src="{{ post.author.profile_picture.url }}" alt="{{ post.author.username }}" class="author-avatar" />
+      {% else %}
+        <img src="{% static 'images/default-avatar.png' %}" alt="{{ post.author.username }}" class="author-avatar" />
+      {% endif %}
+      <div class="post-info">
+        <h3>{{ post.title }}</h3>
+        <p class="post-author">By {{ post.author.username }} • {{ post.created_at|timesince }} ago</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="post-content">
+    {% if post.content %}
+      <p class="post-text">{{ post.content|truncatewords:30 }}</p>
+    {% endif %}
+
+    {% if post.post_type == 'imagepost' %}
+      <div class="post-media">
+        <img src="{{ post.image.url }}" alt="{{ post.caption|default:post.title }}" class="post-image" />
+        {% if post.caption %}
+          <p class="image-caption">{{ post.caption }}</p>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if post.post_type == 'videopost' %}
+      <div class="post-media">
+        {% if post.thumbnail %}
+          <div class="video-thumbnail" style="background-image: url('{{ post.thumbnail.url }}')">
+            <span class="play-icon">▶</span>
+          </div>
+        {% else %}
+          <video controls class="post-video">
+            <source src="{{ post.video.url }}" type="video/mp4" />Your browser does not support the video tag.
+          </video>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if post.post_type == 'voicepost' %}
+      <div class="post-media">
+        <div class="audio-preview">
+          <i class="fas fa-microphone"></i>
+          <span>Audio Post</span>
+          {% if post.duration %}
+            <span class="duration">{{ post.duration }}</span>
+          {% endif %}
+        </div>
+        <audio controls class="post-audio">
+          <source src="{{ post.audio.url }}" type="audio/mpeg" />Your browser does not support the audio element.
+        </audio>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="post-footer">
+    <div class="post-actions">
+      <button class="btn-like {% if request.user in post.likes.all %}liked{% endif %}" data-post-id="{{ post.id }}" data-post-type="{{ post.post_type }}">
+        <i class="fas fa-heart"></i>
+        <span class="likes-count">{{ post.likes.count }}</span>
+      </button>
+      <a href="{% url 'post_detail' post.post_type_url post.id %}" class="btn-comment">
+        <i class="fas fa-comment"></i>
+        Comments ({{ post.comment_set.count }})
+      </a>
+    </div>
+  </div>
+</article>
+
+<style>
+  .post-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.2s;
+  }
+  
+  .post-card:hover {
+    transform: translateY(-2px);
+  }
+  
+  .post-header {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .author-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .post-info h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333;
+  }
+  
+  .post-author {
+    margin: 0.25rem 0 0;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .post-content {
+    padding: 1rem;
+  }
+  
+  .post-text {
+    margin: 0 0 1rem;
+    color: #495057;
+    line-height: 1.5;
+  }
+  
+  .post-media {
+    margin: 1rem 0;
+  }
+  
+  .post-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+  
+  .image-caption {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .video-thumbnail {
+    position: relative;
+    padding-top: 56.25%;
+    background-size: cover;
+    background-position: center;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .play-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3rem;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .post-video,
+  .post-audio {
+    width: 100%;
+    border-radius: 4px;
+  }
+  
+  .audio-preview {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+    color: #495057;
+    margin-bottom: 0.5rem;
+  }
+  
+  .duration {
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .post-footer {
+    padding: 1rem;
+    border-top: 1px solid #eee;
+  }
+  
+  .post-actions {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .btn-like,
+  .btn-comment {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border: none;
+    background: none;
+    color: #666;
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  
+  .btn-like:hover,
+  .btn-comment:hover {
+    color: #007bff;
+  }
+  
+  .btn-like.liked {
+    color: #dc3545;
+  }
+  
+  .btn-like.liked:hover {
+    color: #c82333;
+  }
+</style>
