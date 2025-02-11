@@ -66,7 +66,7 @@
             </div>
 
             <div class="post-footer">
-              <a href="{% url 'post_detail' post.post_type post.id %}" class="read-more">Read More</a>
+              <a href="{% url 'post_detail' post.post_type_url post.id %}" class="read-more">Read More</a>
               <div class="post-stats">
                 <span><i class="fas fa-heart"></i> {{ post.likes.count }}</span>
                 <span><i class="fas fa-comment"></i> {{ post.comment_set.count }}</span>

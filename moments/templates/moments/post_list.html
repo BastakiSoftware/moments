@@ -74,7 +74,7 @@
                 <i class="fas fa-heart"></i>
                 <span class="likes-count">{{ post.likes.count }}</span>
               </button>
-              <a href="{% url 'post_detail' post.post_type post.id %}" class="btn-comment">
+              <a href="{% url 'post_detail' post.post_type_url post.id %}" class="btn-comment">
                 <i class="fas fa-comment"></i>
                 Comments
               </a>

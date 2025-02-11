@@ -44,6 +44,10 @@ class TextPost(BasePost):
         verbose_name = _("Text Post")
         verbose_name_plural = _("Text Posts")
 
+    @property
+    def post_type_url(self):
+        return "text"
+
 
 class ImagePost(BasePost):
     """
@@ -56,6 +60,10 @@ class ImagePost(BasePost):
     class Meta:
         verbose_name = _("Image Post")
         verbose_name_plural = _("Image Posts")
+
+    @property
+    def post_type_url(self):
+        return "image"
 
 
 class VideoPost(BasePost):
@@ -71,6 +79,10 @@ class VideoPost(BasePost):
         verbose_name = _("Video Post")
         verbose_name_plural = _("Video Posts")
 
+    @property
+    def post_type_url(self):
+        return "video"
+
 
 class VoicePost(BasePost):
     """
@@ -83,6 +95,10 @@ class VoicePost(BasePost):
     class Meta:
         verbose_name = _("Voice Post")
         verbose_name_plural = _("Voice Posts")
+
+    @property
+    def post_type_url(self):
+        return "voice"
 
 
 class Comment(models.Model):
