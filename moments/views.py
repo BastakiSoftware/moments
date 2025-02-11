@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.http import Http404
 from django.urls import reverse
 from django.shortcuts import render, redirect
-from .forms import TextPostForm, ImagePostForm, VideoPostForm, VoicePostForm
+from .forms import TextPostForm, ImagePostForm, VideoPostForm, VoicePostForm, Comment
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 
@@ -43,9 +43,13 @@ class PostDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Get comments for the post
-        content_type = ContentType.objects.get_for_model(self.object.__class__)
-        # context["comments"] = self.object.comment_set.all()
+        post = self.get_object()  # Get the post object
+
+        # Get comments using the correct Generic Foreign Key lookup
+        content_type = ContentType.objects.get_for_model(post)
+        context["comments"] = Comment.objects.filter(
+            content_type=content_type, object_id=post.pk
+        )
         return context
 
 
